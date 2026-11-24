@@ -16,7 +16,7 @@
 <h1>스티커판 자체 점검 (임시 페이지)</h1>
 <div class="stage" id="stage0">
   <div class="pane" id="paneLand"><iframe id="pvLand" width="1180" height="820"></iframe></div>
-  <div class="pane" id="panePort"><iframe id="pvPort" width="820" height="1180"></iframe></div>
+  <div class="pane" id="panePort" style="width:615px; height:885px; overflow:hidden;"><iframe id="pvPort" width="820" height="1180" style="transform:scale(0.75); transform-origin:top left;"></iframe></div>
   <div class="pane" id="panePop"><iframe id="pvPop" width="430" height="760"></iframe></div>
 </div>
 <div id="stage" style="position:absolute; left:-4000px; top:0;"></div>
@@ -257,6 +257,11 @@ async function previewSuite() {
 }
 
 (async function () {
+  if (location.search.indexOf("preview=1") >= 0) {
+    try { await previewSuite(); } catch (e) { t("preview exception", false, e && e.message); }
+    report();
+    return;
+  }
   try {
     await layoutSuite("가로1180x820", 1180, 820);
     await layoutSuite("세로820x1180", 820, 1180);
