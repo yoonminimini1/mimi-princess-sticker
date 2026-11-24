@@ -152,10 +152,9 @@
   @keyframes cardGlow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.04);}}
   .card.area-board{overflow:hidden;
     background:radial-gradient(120% 85% at 50% -10%, #ffffff 0%, #f2fbff 42%, #e4f4ff 78%, #ecfdf8 100%);}
-  .card.area-board::before{content:""; position:absolute; left:12%; right:12%; top:0; height:8px;
-    border-radius:0 0 8px 8px;
+  .card.area-board::before{content:""; position:absolute; left:0; right:0; top:0; height:7px;
     background-image:repeating-conic-gradient(#17365f 0% 25%, #ffffff 0% 50%);
-    background-size:16px 8px; opacity:.92;}
+    background-size:14px 7px; opacity:.88;}
   .card.area-board::after{content:""; position:absolute; inset:7px; border-radius:calc(var(--radius) - 5px);
     border:2px dashed rgba(90,175,235,.4); pointer-events:none;}
   .card.area-picker{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(233,249,255,.88));}
@@ -980,9 +979,8 @@
     }
     svg.setAttribute("viewBox", "0 0 " + wrap.width.toFixed(0) + " " + wrap.height.toFixed(0));
     svg.innerHTML =
-      '<path d="' + d + '" fill="none" stroke="#b9d4e8" stroke-width="10" stroke-linecap="round"/>' +
-      '<path d="' + d + '" fill="none" stroke="#eaf6ff" stroke-width="7.5" stroke-linecap="round"/>' +
-      '<path d="' + d + '" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="1 14"/>';
+      '<path d="' + d + '" fill="none" stroke="#b6cfe2" stroke-width="11" stroke-linecap="round"/>' +
+      '<path d="' + d + '" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-dasharray="2 12"/>';
   }
 
   function renderPicker() {
