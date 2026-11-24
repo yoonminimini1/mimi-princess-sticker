@@ -134,12 +134,12 @@
     transform:translateX(-100%); animation:shine 2.6s ease-in-out infinite;}
   @keyframes shine{0%{transform:translateX(-100%);}60%,100%{transform:translateX(160%);}}
   .bar-wrap{grid-area:bar; position:relative; padding-top:clamp(13px,2vmin,19px);}
-  .bar-marks{position:absolute; left:0; right:0; top:0; height:clamp(13px,2vmin,19px); pointer-events:none;}
-  .bm{position:absolute; top:50%; transform:translate(-50%,-52%); line-height:1; font-size:clamp(11px,1.7vmin,15px);
+  .bar-marks{position:absolute; left:0; right:0; top:0; height:clamp(13px,2vmin,19px); pointer-events:none; z-index:2;}
+  .bm{position:absolute; top:0; transform:translateX(-50%); line-height:1; font-size:clamp(12px,1.9vmin,16px);
     filter:drop-shadow(0 2px 3px rgba(180,120,20,.45));}
   .bm::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:clamp(4px,0.8vmin,6px); margin-left:-1px;
     background:linear-gradient(180deg,#ffc93c,rgba(255,201,60,0)); border-radius:2px;}
-  .bm.final{transform:translate(-100%,-52%);}
+  .bm.final{transform:translateX(-100%);}
 
   /* ---------- board ---------- */
   .board-card.full{box-shadow:0 0 0 3px rgba(255,201,60,.7), 0 18px 50px -18px rgba(255,170,60,.7), 0 2px 0 rgba(255,255,255,.9) inset; animation:cardGlow 2.2s ease-in-out infinite;}
