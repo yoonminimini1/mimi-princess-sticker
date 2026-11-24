@@ -359,6 +359,7 @@
       align-items:start; align-content:start; gap:clamp(8px,1.2vmin,14px);}
     .card.area-progress{padding:calc(clamp(8px,1.2vmin,14px)) clamp(14px,2vmin,22px);}
     .card.area-progress .prog-inner{grid-template-columns:auto minmax(80px,1fr) auto; grid-template-areas:"count bar msg";}
+    .layout.board-first{grid-template-columns:minmax(0,1.5fr) minmax(0,.62fr);}
     .card.area-board{align-self:start;}
     .card.area-missions{align-self:stretch; display:flex; flex-direction:column;}
     .card.area-missions #missions{flex:1 1 auto; display:flex; flex-direction:column; justify-content:center;}
@@ -924,7 +925,10 @@
     var gap = parseFloat(window.getComputedStyle(boardEl).columnGap) || 8;
     var wrapW = boardWrap.clientWidth || boardEl.clientWidth || 0;
     if (!wrapW) return;
-    var availH = window.innerHeight - boardCard.getBoundingClientRect().top - 96;
+    var cardR = boardCard.getBoundingClientRect();
+    /* 카드에서 판을 뺀 나머지(제목·여백·발밑 문구)는 칸 크기와 상관없이 일정해요 */
+    var chrome = cardR.height - boardEl.getBoundingClientRect().height;
+    var availH = window.innerHeight - cardR.top - chrome - 10;
     var byW = (wrapW - gap * (cols - 1)) / cols;
     var size = Math.min(byW, 148);
     if (availH > 0) {

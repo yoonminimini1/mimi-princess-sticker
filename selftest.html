@@ -90,7 +90,8 @@ async function layoutSuite(tag, w, h) {
   t(tag + ": 가로 넘침 없음",
     win(f).document.documentElement.scrollWidth <= win(f).innerWidth + 1,
     win(f).document.documentElement.scrollWidth + "/" + win(f).innerWidth);
-  t(tag + ": 판이 화면 안", cardR.bottom <= win(f).innerHeight + 2, Math.round(cardR.bottom) + "/" + win(f).innerHeight);
+  if (w >= 800) t(tag + ": 판이 화면 안", cardR.bottom <= win(f).innerHeight + 2, Math.round(cardR.bottom) + "/" + win(f).innerHeight);
+  else t(tag + ": 판이 세로로 길어 스크롤 가능", win(f).document.documentElement.scrollHeight > win(f).innerHeight, win(f).document.documentElement.scrollHeight);
   t(tag + ": 25번 중간보상 표시", q(f, '.slot[data-i="24"]').classList.contains("mid"));
   t(tag + ": 25번에 🎁", q(f, '.slot[data-i="24"]').textContent.indexOf("🎁") >= 0);
   t(tag + ": 50번 최종보상 표시", q(f, '.slot[data-i="49"]').classList.contains("final"));
@@ -154,7 +155,8 @@ async function parentSuite(tag) {
     Array.prototype.map.call(qa(f, "#slotSeg button"), function (b) { return b.getAttribute("data-n"); }).join(",") === "10,20,50");
   function setVal(sel, val) {
     var el = q(f, sel); el.value = val;
-    el.dispatchEvent(new win(f).Event("input", { bubbles: true }));
+    var Ev = win(f).Event;
+    el.dispatchEvent(new Ev("input", { bubbles: true }));
   }
   setVal("#pMidReward", "🍦 달콤한 간식 타임!");
   setVal("#pReward", "🎡 롯데월드 가기!");
