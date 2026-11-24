@@ -386,6 +386,21 @@
   @media (min-width:1024px) and (orientation:portrait){
     .wrap{max-width:860px;}
   }
+  /* 세로 화면: 머리 부분을 아껴 50칸이 한 화면에 들어오게 */
+  @media (orientation:portrait){
+    .wrap{padding-top:calc(4px + env(safe-area-inset-top));}
+    .topbar{padding:2px 2px 4px;}
+    .hero{padding:0 0 6px;}
+    .hero .tiara{display:none;}
+    .hero h1{font-size:clamp(17px,3.2vmin,28px);}
+    .hero .sub{margin-top:2px; font-size:clamp(11px,1.7vmin,14px);}
+    .card{padding:clamp(10px,1.5vmin,16px);}
+    .card-title{margin-bottom:clamp(5px,1vmin,9px); font-size:clamp(13px,1.9vmin,17px);}
+    .card.area-progress .prog-inner{gap:5px 10px;}
+    .bar-wrap{padding-top:clamp(12px,1.8vmin,17px);}
+    .board-foot{margin-top:clamp(5px,1vmin,9px);}
+    .board-hint{margin-top:4px;}
+  }
   @media (max-width:400px){
     .brand{font-size:13px;}
     .mission .m-btn{padding:8px 10px;}
@@ -949,7 +964,7 @@
     size = Math.floor(size);
     /* 세로 화면에서는 높이에 맞춰 너무 작아지지 않게: 칸이 손가락에 맞는 크기를 지키고
        판이 길면 페이지가 조금 스크롤돼요 */
-    var floorSize = Math.round(Math.min(byW, 148) * (isPortrait() ? 0.62 : 0.82));
+    var floorSize = Math.round(Math.min(byW, 148) * (isPortrait() ? 0.52 : 0.82));
     if (size < floorSize) size = floorSize;
     if (size < 30) size = 30;
     boardEl.style.setProperty("--slot", size + "px");
