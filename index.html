@@ -118,7 +118,7 @@
   .card-title small{margin-left:auto; font-weight:800; color:var(--ink-soft); font-size:.72em;}
 
   /* ---------- progress ---------- */
-  .prog-inner{display:grid; grid-template-columns:1fr auto; grid-template-areas:"count msg" "bar bar"; gap:5px 12px; align-items:center;}
+  .prog-inner{display:grid; grid-template-columns:1fr auto; grid-template-areas:"count msg" "bar bar"; gap:8px 12px; align-items:center;}
   .prog-count{grid-area:count; font-weight:900; font-size:clamp(15px,2.3vmin,22px); color:var(--ink); white-space:nowrap;}
   .prog-count b{font-size:1.55em; color:var(--pink-deep); letter-spacing:-.02em;}
   .prog-msg{grid-area:msg; font-weight:800; color:var(--ink-soft); font-size:clamp(11px,1.7vmin,15px); text-align:right;}
@@ -131,6 +131,13 @@
   .bar-fill::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.75),rgba(255,255,255,0));
     transform:translateX(-100%); animation:shine 2.6s ease-in-out infinite;}
   @keyframes shine{0%{transform:translateX(-100%);}60%,100%{transform:translateX(160%);}}
+  .bar-wrap{grid-area:bar; position:relative; padding-top:clamp(13px,2vmin,19px);}
+  .bar-marks{position:absolute; left:0; right:0; top:0; height:clamp(13px,2vmin,19px); pointer-events:none;}
+  .bm{position:absolute; top:50%; transform:translate(-50%,-52%); line-height:1; font-size:clamp(11px,1.7vmin,15px);
+    filter:drop-shadow(0 2px 3px rgba(180,120,20,.45));}
+  .bm::after{content:""; position:absolute; left:50%; top:100%; width:2px; height:clamp(4px,0.8vmin,6px); margin-left:-1px;
+    background:linear-gradient(180deg,#ffc93c,rgba(255,201,60,0)); border-radius:2px;}
+  .bm.final{transform:translate(-78%,-52%);}
 
   /* ---------- board ---------- */
   .board-card.full{box-shadow:0 0 0 3px rgba(255,201,60,.7), 0 18px 50px -18px rgba(255,170,60,.7), 0 2px 0 rgba(255,255,255,.9) inset; animation:cardGlow 2.2s ease-in-out infinite;}
@@ -176,6 +183,19 @@
   @keyframes wig{0%,100%{transform:translateY(var(--lift,0)) rotate(0);}25%{transform:translateY(var(--lift,0)) rotate(-7deg) scale(1.04);}75%{transform:translateY(var(--lift,0)) rotate(7deg) scale(1.04);}}
   .slot.pulse::before{content:""; position:absolute; inset:-6px; border-radius:50%; border:2px solid rgba(255,127,184,.55); animation:pulseRing 2s ease-out infinite;}
   @keyframes pulseRing{0%{transform:scale(.92); opacity:.8;}100%{transform:scale(1.18); opacity:0;}}
+  /* ---------- milestone slots (중간·최종 보상) ---------- */
+  .slot.milestone{border-style:solid; border-color:#ffc93c;
+    background:radial-gradient(circle at 32% 26%, #fffdf6 0%, #fff8e2 55%, #ffefc2 100%);
+    box-shadow:inset 0 0 0 3px rgba(255,255,255,.92), 0 0 0 2px rgba(255,201,60,.85), 0 6px 18px -9px rgba(230,160,20,.8);
+    animation:msGlow 2.6s ease-in-out infinite;}
+  .slot.milestone .ms-ico{position:absolute; left:50%; top:50%; transform:translate(-50%,-58%);
+    font-size:clamp(14px,4.4vmin,42px); line-height:1; filter:drop-shadow(0 2px 3px rgba(200,140,20,.45));}
+  .slot.milestone .ms-num{position:absolute; left:50%; bottom:4%; transform:translateX(-50%);
+    font-size:clamp(7px,1.45vmin,12px); font-weight:900; color:#b88700; letter-spacing:.02em;}
+  .slot.milestone .ms-star{position:absolute; top:1%; right:5%; font-size:clamp(8px,1.7vmin,14px); line-height:1;
+    filter:drop-shadow(0 1px 2px rgba(160,110,0,.55)); animation:tw 2.6s ease-in-out infinite;}
+  .slot.milestone.filled{box-shadow:0 0 0 2.5px rgba(255,201,60,.95), 0 8px 20px -9px rgba(230,160,20,.9), inset 0 0 0 3px rgba(255,255,255,.75);}
+  @keyframes msGlow{0%,100%{filter:brightness(1);}50%{filter:brightness(1.06);}}
   .board-foot{display:flex; align-items:center; justify-content:center; gap:8px; margin-top:clamp(8px,1.6vmin,14px);
     font-size:clamp(11px,1.7vmin,15px); font-weight:800; color:var(--ink-soft);}
   .board-foot .castle{font-size:1.5em; filter:drop-shadow(0 3px 5px rgba(200,140,220,.5));}
@@ -389,14 +409,17 @@
   <div class="layout">
     <section class="card area-progress" aria-label="스티커 진행 상황">
       <div class="prog-inner">
-        <div class="prog-count"><b id="progNow">0</b> / <span id="progAll">20</span> 스티커</div>
+        <div class="prog-count"><b id="progNow">0</b> / <span id="progAll">50</span> 스티커</div>
         <div class="prog-msg" id="progMsg">오늘도 화이팅!</div>
-        <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        <div class="bar-wrap">
+          <div class="bar-marks" id="barMarks" aria-hidden="true"></div>
+          <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        </div>
       </div>
     </section>
 
     <section class="card area-board board-card" id="boardCard" aria-label="스티커판">
-      <div class="card-title"><span class="ico">🏰</span>마법 성으로 가는 길<small id="boardSub">20칸</small></div>
+      <div class="card-title"><span class="ico">🏰</span>마법 성으로 가는 길<small id="boardSub">50칸</small></div>
       <div class="board-wrap">
         <svg class="board-path" id="boardPath" aria-hidden="true"></svg>
         <div class="board" id="board"></div>
@@ -424,14 +447,31 @@
   <div class="modal-backdrop" data-close="reward"></div>
   <div class="modal-card reward">
     <div class="reward-castle">🏰</div>
-    <p class="reward-kicker">스티커판을 다 모았어요!</p>
+    <p class="reward-kicker" id="rewardKicker">🏰 50칸 완성! 공주성 도착!</p>
     <h2 class="reward-title" id="rewardTitle">공주님, 축하해요!</h2>
     <div class="reward-box">
-      <span class="lbl">🎁 오늘의 선물</span>
+      <span class="lbl" id="rewardLbl">👑 최종보상</span>
       <p id="rewardText">엄마랑 같이 고른 선물!</p>
     </div>
     <div class="reward-crowns">👑 왕관 <b id="modalCrowns">1</b>개 모았어요</div>    <button class="btn btn-primary" id="newBoardBtn">새 스티커판 시작하기</button>
     <button class="btn btn-ghost" id="closeRewardBtn" style="margin-top:8px;">조금 있다가 볼래요</button>
+  </div>
+</div>
+
+<!-- 중간 보상 축하 -->
+<div class="modal" id="midModal" role="dialog" aria-modal="true" aria-labelledby="midTitle">
+  <div class="modal-backdrop" data-close="mid"></div>
+  <div class="modal-card reward">
+    <div class="reward-castle">🎁</div>
+    <p class="reward-kicker">🌟 절반 성공! 중간 보상 받는 날!</p>
+    <h2 class="reward-title" id="midTitle">공주님, 절반이나 모았어요!</h2>
+    <div class="reward-box">
+      <span class="lbl">🎁 중간보상</span>
+      <p id="midRewardText">🎁 작은 선물 고르기!</p>
+    </div>
+    <div class="reward-crowns">🎯 <b id="midPillNow">25</b> / <span id="midPillAll">50</span>칸 모았어요</div>
+    <button class="btn btn-primary" id="midContinueBtn">계속 모아서 성에 도착하기 🏰</button>
+    <button class="btn btn-ghost" id="closeMidBtn" style="margin-top:8px;">조금 있다가 볼래요</button>
   </div>
 </div>
 
@@ -468,15 +508,22 @@
       <div class="pgroup">
         <span class="plabel">스티커판 칸 수</span>
         <div class="seg" id="slotSeg">
-          <button data-n="10">10칸 (금방 모으기)</button>
-          <button data-n="20">20칸 (기본)</button>
+          <button data-n="10">10칸</button>
+          <button data-n="20">20칸</button>
+          <button data-n="50">50칸 (기본)</button>
         </div>
-        <p class="pnote">20칸은 태블릿 세로에서 4×5, 가로에서 5×4로 보여요. 칸 수를 바꿔도 붙인 스티커는 그대로예요.</p>
+        <p class="pnote">50칸은 태블릿 가로에서 10×5, 세로·휴대폰에서 5×10으로 보여요. 25번째 칸이 중간보상, 마지막 칸이 최종보상이에요. 칸 수를 바꿔도 붙인 스티커는 그대로예요.</p>
       </div>
 
       <div class="pgroup">
-        <label class="plabel" for="pReward">보상 문구</label>
-        <textarea class="tarea" id="pReward" maxlength="80" placeholder="예: 🎁 엄마랑 같이 고른 선물!"></textarea>
+        <label class="plabel" for="pMidReward">중간보상 문구 (절반 모았을 때)</label>
+        <textarea class="tarea" id="pMidReward" maxlength="80" placeholder="예: 🎁 작은 선물 고르기!"></textarea>
+        <div class="chips" id="midRewardChips"></div>
+      </div>
+
+      <div class="pgroup">
+        <label class="plabel" for="pReward">최종보상 문구 (다 모았을 때)</label>
+        <textarea class="tarea" id="pReward" maxlength="80" placeholder="예: 👑 공주님 큰 선물!"></textarea>
         <div class="chips" id="rewardChips"></div>
       </div>
 
@@ -502,6 +549,7 @@
         <span class="plabel">판 관리</span>
         <div class="row-tools" style="flex-direction:column;">
           <button class="btn btn-ghost" id="undoSticker">↩︎ 마지막 스티커 하나 떼기</button>
+          <button class="btn btn-ghost" id="previewMidReward">🎁 중간보상 화면 미리 보기</button>
           <button class="btn btn-danger" id="clearBoard">현재 스티커판 비우기</button>
           <button class="btn btn-danger" id="resetAll">모두 처음부터 (기록 삭제)</button>
         </div>
@@ -538,8 +586,12 @@
   var MISSION_EMOJIS = ["✏️","📖","📚","🦷","🧸","🍚","🛁","🧹","🎨","🎹","🐶","🌱","🧺","🚰","😴","🤗","🍎","👟","🎒","💗"];
   var PRAISES = ["최고예요!","반짝반짝!","멋져요!","공주님 짱!","잘했어요!","대단해요!","뽀뽀!","와~ 굿!","예뻐요!"];
   var REWARD_PRESETS = [
-    "🍦 아이스크림 먹기","🧸 갖고 싶던 장난감","🎠 키즈카페 가기","🦁 동물원 나들이",
-    "📚 새 그림책 사기","🍰 엄마랑 케이크 데이트","🎨 미술놀이 세트","🌈 놀이터에서 실컷 놀기"
+    "👑 공주님 큰 선물!","🍦 아이스크림 먹기","🧸 갖고 싶던 장난감","🎠 키즈카페 가기",
+    "🦁 동물원 나들이","📚 새 그림책 사기","🍰 엄마랑 케이크 데이트","🌈 놀이터에서 실컷 놀기"
+  ];
+  var MID_REWARD_PRESETS = [
+    "🎁 작은 선물 고르기!","🍦 달콤한 간식 타임!","🎠 놀이터에서 신나게 놀기",
+    "📚 새 그림책 한 권","🍰 엄마랑 케이크 데이트","🎨 스티커 사러 가기"
   ];
   var DEFAULT_MISSIONS = [
     { id: "m1", emoji: "✏️", text: "원리셈 2바닥" },
@@ -565,15 +617,17 @@
   }
   function defaults() {
     return {
-      v: 2,
+      v: 3,
       name: "Mimi",
-      slotCount: 20,
-      slots: makeSlots(20),
+      slotCount: 50,
+      slots: makeSlots(50),
       selected: 0,
       missions: clone(DEFAULT_MISSIONS),
       doneDate: todayStr(),
       doneIds: [],
-      reward: "🎁 엄마랑 같이 고른 선물!",
+      reward: "👑 공주님 큰 선물!",
+      midReward: "🎁 작은 선물 고르기!",
+      midRewardClaimed: false,
       crowns: 0,
       muted: false,
       helped: false
@@ -591,11 +645,15 @@
     var d = defaults();
     state.name = typeof s.name === "string" ? s.name : d.name;
     state.reward = typeof s.reward === "string" && s.reward.trim() ? s.reward : d.reward;
+    state.midReward = typeof s.midReward === "string" && s.midReward.trim() ? s.midReward : d.midReward;
+    state.midRewardClaimed = !!s.midRewardClaimed;
     state.muted = !!s.muted;
     state.helped = !!s.helped;
     state.crowns = typeof s.crowns === "number" && s.crowns >= 0 ? Math.floor(s.crowns) : 0;
     state.selected = typeof s.selected === "number" && s.selected >= 0 && s.selected < STICKERS.length ? Math.floor(s.selected) : 0;
-    state.slotCount = (s.slotCount === 10 || s.slotCount === 20) ? s.slotCount : 20;
+    /* 칸 수: 10·20·50 지원. 예전 기본값(20)은 새 기본값 50칸으로 넓히되, 붙인 스티커는 그대로 살려요 */
+    var sc = parseInt(s.slotCount, 10);
+    state.slotCount = (sc === 10) ? 10 : 50;   /* 10칸(직접 고른 경우)만 유지, 20칸·기본값은 50칸으로 */
 
     var slots = [];
     var src = Array.isArray(s.slots) ? s.slots : [];
@@ -622,6 +680,8 @@
     state.doneDate = typeof s.doneDate === "string" ? s.doneDate : todayStr();
     state.doneIds = Array.isArray(s.doneIds) ? s.doneIds.filter(function (x) { return typeof x === "string"; }) : [];
     if (state.doneDate !== todayStr()) { state.doneDate = todayStr(); state.doneIds = []; }
+    /* 이미 중간보상을 지난 판이면 축하 팝업을 다시 띄우지 않아요 */
+    if (filledCount() >= midIndex()) state.midRewardClaimed = true;
   }
 
   var storageOK = (function () {
@@ -639,7 +699,8 @@
       progAll = $("progAll"), progMsg = $("progMsg"), crownCount = $("crownCount"),
       crownPill = $("crownPill"), pickName = $("pickName"), boardSub = $("boardSub"),
       toastEl = $("toast"), fx = $("fx"), ctx2d = fx.getContext("2d"),
-      rewardModal = $("rewardModal"), gateModal = $("gateModal"), parentPanel = $("parentPanel");
+      rewardModal = $("rewardModal"), midModal = $("midModal"), gateModal = $("gateModal"), parentPanel = $("parentPanel"),
+      boardWrap = document.querySelector(".board-wrap"), barMarks = $("barMarks");
 
   /* ============================== sound ============================== */
   var actx = null, audioUnlocked = false;
@@ -792,9 +853,11 @@
   /* ============================== render ============================== */
   function isPortrait() { return window.innerHeight >= window.innerWidth; }
   function gridCols() {
-    if (state.slotCount === 10) return 5;
-    return isPortrait() ? 4 : 5;   /* 4x5 세로 · 5x4 가로 */
+    if (state.slotCount >= 50) return isPortrait() ? 5 : 10;   /* 50칸: 세로 5x10 · 가로 10x5 */
+    if (state.slotCount === 10) return 5;                      /* 10칸: 5x2 */
+    return isPortrait() ? 4 : 5;   /* 20칸: 4x5 세로 · 5x4 가로 */
   }
+  function midIndex() { return Math.ceil(state.slotCount / 2); }   /* 50칸 → 25번째 칸이 중간보상 */
   function filledCount() {
     var n = 0;
     for (var i = 0; i < state.slots.length; i++) if (state.slots[i] !== null) n++;
@@ -812,6 +875,7 @@
 
   function renderBoard(popIndex) {
     var cols = gridCols();
+    var mid = midIndex();
     var html = "";
     for (var i = 0; i < state.slotCount; i++) {
       var s = state.slots[i];
@@ -819,20 +883,53 @@
       var t = cols > 1 ? col / (cols - 1) : 0;
       var lift = -Math.round(Math.sin(Math.PI * t) * 9);
       var filled = s !== null && s !== undefined;
-      var cls = "slot" + (filled ? " filled" : "") + (popIndex === i ? " pop" : "");
+      var isMid = (i + 1) === mid;
+      var isFinal = (i + 1) === state.slotCount;
+      var ms = isMid ? " milestone mid" : isFinal ? " milestone final" : "";
+      var msIco = isMid ? "🎁" : "🏰";
+      var msName = isMid ? ", 중간보상" : isFinal ? ", 최종보상" : "";
+      var cls = "slot" + (filled ? " filled" : "") + ms + (popIndex === i ? " pop" : "");
       if (!filled && filledCount() === 0 && i === 0 && !state.helped) cls += " pulse";
+      var inner;
+      if (filled) {
+        inner = '<img class="s-img" src="' + STICKERS[s].src + '" alt="" draggable="false">' +
+          '<span class="s-glint">✨</span>' +
+          (ms ? '<span class="ms-star">' + msIco + '</span>' : '');
+      } else if (ms) {
+        inner = '<span class="ms-ico">' + msIco + '</span><span class="ms-num">' + (i + 1) + '</span>';
+      } else {
+        inner = '<span class="s-num">' + (i + 1) + '</span><span class="s-sp">✦</span>';
+      }
       html += '<button type="button" class="' + cls + '" data-i="' + i + '" style="--lift:' + lift + 'px" ' +
-        'aria-label="' + (i + 1) + '번 칸' + (filled ? ", " + STICKERS[s].n + " 스티커" : ", 비어 있음") + '">' +
-        (filled
-          ? '<img class="s-img" src="' + STICKERS[s].src + '" alt="" draggable="false">' +
-            '<span class="s-glint">✨</span>'
-          : '<span class="s-num">' + (i + 1) + '</span><span class="s-sp">✦</span>') +
+        'aria-label="' + (i + 1) + '번 칸' + msName + (filled ? ", " + STICKERS[s].n + " 스티커" : ", 비어 있음") + '">' +
+        inner +
         '</button>';
     }
     boardEl.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0, var(--slot)))";
     boardEl.innerHTML = html;
-    boardSub.textContent = state.slotCount + "칸";
+    boardSub.textContent = state.slotCount + "칸 · 중간보상 " + mid + "칸";
+    sizeSlots();
     drawBoardPath();
+  }
+
+  /* 칸 크기를 화면에 맞춰 계산: 가로 10x5 / 세로 5x10이 한눈에 들어오고, 터치는 최소 40px */
+  function sizeSlots() {
+    if (!boardEl || !boardWrap) return;
+    var cols = gridCols();
+    var rows = Math.ceil(state.slotCount / cols);
+    var gap = parseFloat(window.getComputedStyle(boardEl).columnGap) || 8;
+    var wrapW = boardWrap.clientWidth || boardEl.clientWidth || 0;
+    if (!wrapW) return;
+    var availH = window.innerHeight - boardCard.getBoundingClientRect().top - 96;
+    var byW = (wrapW - gap * (cols - 1)) / cols;
+    var size = Math.min(byW, 148);
+    if (availH > 0) {
+      var byH = (availH - gap * (rows - 1)) / rows;
+      size = Math.min(size, Math.max(byH, 40));
+    }
+    size = Math.floor(size);
+    if (size < 30) size = 30;
+    boardEl.style.setProperty("--slot", size + "px");
   }
 
   /* 달콤한 마법 길: 칸들을 잇는 점선 */
@@ -909,29 +1006,41 @@
   }
 
   function progressMessage(f, total) {
+    var mid = Math.ceil(total / 2);
     if (f === 0) return "첫 스티커를 붙여 볼까요?";
     if (f >= total) return "다 모았어요! 🎉";
-    var left = total - f;
-    if (left <= 2) return "이제 " + left + "칸 남았어요!";
-    if (f >= total / 2) return "반 넘게 모았어요!";
-    return left + "칸 남았어요";
+    if (f === mid) return "절반 성공! 중간보상 🎁";
+    if (f > mid) return "성까지 " + (total - f) + "칸 남았어요!";
+    if (f === total - 1) return "이제 1칸 남았어요!";
+    return (mid - f) + "칸만 더 모으면 중간보상!";
   }
 
   function renderProgress() {
-    var f = filledCount(), total = state.slotCount;
+    var f = filledCount(), total = state.slotCount, mid = midIndex();
     progNow.textContent = f;
     progAll.textContent = total;
     barFill.style.width = Math.round((f / total) * 100) + "%";
     progMsg.textContent = progressMessage(f, total);
+    renderMarks();
     crownCount.textContent = state.crowns;
     var full = f >= total;
     boardCard.classList.toggle("full", full);
-    $("boardFootTxt").textContent = full ? "성에 도착했어요! 🎉" : "다 모으면 성에 도착!";
+    $("boardFootTxt").textContent = full ? "성에 도착했어요! 🎉"
+      : f < mid ? "중간보상은 " + mid + "번째 칸 🎁" : "성까지 " + (total - f) + "칸 남았어요!";
     $("boardHint").textContent = full ? "엄마와 함께 선물을 확인해요!" : "빈 칸을 콕 누르면 스티커가 붙어요";
     $("heroTitle").textContent = boardTitle();
     $("heroSub").textContent = greeting();
     $("brandTxt").textContent = state.name ? state.name + " 공주" : "공주 스티커";
     $("soundBtn").textContent = state.muted ? "🔇" : "🔔";
+  }
+
+  /* 진행바 위 중간보상·최종보상 표시 */
+  function renderMarks() {
+    if (!barMarks) return;
+    var total = state.slotCount, mid = midIndex();
+    barMarks.innerHTML =
+      '<span class="bm mid" style="left:' + ((mid / total) * 100).toFixed(1) + '%;" title="중간보상 ' + mid + '칸">🎁</span>' +
+      '<span class="bm final" style="left:100%;" title="최종보상 ' + total + '칸">🏰</span>';
   }
 
   function renderAll(popIndex) {
@@ -971,6 +1080,8 @@
     var f = filledCount();
     if (f >= state.slotCount) {
       window.setTimeout(finishBoard, 720);
+    } else if (f === midIndex() && !state.midRewardClaimed) {
+      window.setTimeout(showMidReward, 780);
     } else if (f === state.slotCount - 1) {
       window.setTimeout(function () { toast("한 칸 남았어요! 🎉"); }, 500);
     }
@@ -979,6 +1090,7 @@
 
   function finishBoard() {
     state.crowns = (state.crowns || 0) + 1;
+    state.midRewardClaimed = true;
     save();
     renderProgress();
     crownPill.classList.remove("pop");
@@ -989,12 +1101,34 @@
     $("modalCrowns").textContent = state.crowns;
     $("rewardText").textContent = state.reward;
     $("rewardTitle").textContent = displayName() + ", 축하해요!";
+    $("rewardKicker").textContent = "🏰 " + state.slotCount + "칸 완성! 공주성 도착!";
+    $("rewardLbl").textContent = "👑 최종보상";
     openModal(rewardModal);
     vibrate([20, 60, 20, 60, 40]);
   }
 
+  /* 중간보상 축하 팝업 */
+  function fillMidModal() {
+    var mid = midIndex();
+    $("midRewardText").textContent = state.midReward;
+    $("midTitle").textContent = displayName() + ", 절반이나 모았어요!";
+    $("midPillNow").textContent = mid;
+    $("midPillAll").textContent = state.slotCount;
+  }
+  function showMidReward() {
+    state.midRewardClaimed = true;
+    save();
+    fillMidModal();
+    sfxSparkle();
+    window.setTimeout(sfxFanfare, 260);
+    rainConfetti(96);
+    openModal(midModal);
+    vibrate([15, 50, 15, 50, 30]);
+  }
+
   function startNewBoard() {
     state.slots = makeSlots(state.slotCount);
+    state.midRewardClaimed = false;
     save();
     renderAll();
     closeModal(rewardModal);
@@ -1082,19 +1216,25 @@
   $("newBoardBtn").addEventListener("click", function () { unlockAudio(); startNewBoard(); });
   $("boardRestart").addEventListener("click", function () { unlockAudio(); startNewBoard(); });
   $("closeRewardBtn").addEventListener("click", function () { closeModal(rewardModal); });
+  $("midContinueBtn").addEventListener("click", function () {
+    closeModal(midModal);
+    toast("이제 성까지 " + (state.slotCount - filledCount()) + "칸! 화이팅 💪");
+  });
+  $("closeMidBtn").addEventListener("click", function () { closeModal(midModal); });
 
   var backs = document.querySelectorAll("[data-close]");
   for (var bi = 0; bi < backs.length; bi++) {
     backs[bi].addEventListener("click", function () {
       var which = this.getAttribute("data-close");
       if (which === "reward") closeModal(rewardModal);
+      else if (which === "mid") closeModal(midModal);
       else if (which === "gate") closeModal(gateModal);
       else if (which === "parent") closeModal(parentPanel);
     });
   }
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      closeModal(rewardModal); closeModal(gateModal); closeModal(parentPanel);
+      closeModal(rewardModal); closeModal(midModal); closeModal(gateModal); closeModal(parentPanel);
       if (!document.querySelector(".modal.show")) document.body.style.overflow = "";
     }
   });
@@ -1197,6 +1337,7 @@
   function fillParent() {
     $("pName").value = state.name;
     $("pReward").value = state.reward;
+    $("pMidReward").value = state.midReward;
     $("pCrowns").textContent = state.crowns;
     var seg = $("slotSeg").children;
     for (var i = 0; i < seg.length; i++) {
@@ -1207,6 +1348,11 @@
       chips += '<button type="button" class="chip" data-r="' + escapeHtml(REWARD_PRESETS[c]) + '">' + REWARD_PRESETS[c] + '</button>';
     }
     $("rewardChips").innerHTML = chips;
+    var mchips = "";
+    for (var mc = 0; mc < MID_REWARD_PRESETS.length; mc++) {
+      mchips += '<button type="button" class="chip" data-r="' + escapeHtml(MID_REWARD_PRESETS[mc]) + '">' + MID_REWARD_PRESETS[mc] + '</button>';
+    }
+    $("midRewardChips").innerHTML = mchips;
     renderParentMissions();
   }
 
@@ -1297,6 +1443,10 @@
     state.reward = this.value.slice(0, 80);
     save();
   });
+  $("pMidReward").addEventListener("input", function () {
+    state.midReward = this.value.slice(0, 80);
+    save();
+  });
   $("rewardChips").addEventListener("click", function (ev) {
     var node = ev.target;
     while (node && node !== this) {
@@ -1311,6 +1461,29 @@
     save();
     sfxTap();
   });
+  $("midRewardChips").addEventListener("click", function (ev) {
+    var node = ev.target;
+    while (node && node !== this) {
+      if (node.getAttribute && node.getAttribute("data-r")) break;
+      node = node.parentNode;
+    }
+    if (!node || !node.getAttribute) return;
+    var val = node.getAttribute("data-r");
+    if (!val) return;
+    state.midReward = val;
+    $("pMidReward").value = val;
+    save();
+    sfxTap();
+  });
+
+  /* 중간보상 팝업 미리 보기 (엄마 모드) */
+  $("previewMidReward").addEventListener("click", function () {
+    unlockAudio();
+    fillMidModal();
+    sfxSparkle();
+    rainConfetti(50);
+    openModal(midModal);
+  });
 
   $("slotSeg").addEventListener("click", function (ev) {
     var node = ev.target;
@@ -1320,7 +1493,7 @@
     }
     if (!node || !node.getAttribute) return;
     var n = parseInt(node.getAttribute("data-n"), 10);
-    if (n !== 10 && n !== 20) return;
+    if (n !== 10 && n !== 20 && n !== 50) return;
     if (n === state.slotCount) return;
     setSlotCount(n);
   });
@@ -1336,11 +1509,12 @@
     for (var i = 0; i < carry; i++) arr[i] = state.slots[i];
     state.slots = arr;
     state.slotCount = n;
+    state.midRewardClaimed = false;
     save();
     fillParent();
     renderAll();
     sfxTap();
-    toast(n === 10 ? "10칸으로 바꿨어요" : "20칸으로 바꿨어요");
+    toast(n + "칸으로 바꿨어요");
   }
 
   $("soundSwitch").addEventListener("click", function () {
@@ -1362,6 +1536,7 @@
     for (var i = state.slots.length - 1; i >= 0; i--) {
       if (state.slots[i] !== null) {
         state.slots[i] = null;
+        if (filledCount() < midIndex()) state.midRewardClaimed = false;
         save();
         renderAll();
         toast("마지막 스티커를 뗐어요");
@@ -1374,6 +1549,7 @@
     if (filledCount() === 0) { toast("이미 비어 있어요"); return; }
     if (!window.confirm("지금 스티커판을 비울까요? (왕관 기록은 그대로예요)")) return;
     state.slots = makeSlots(state.slotCount);
+    state.midRewardClaimed = false;
     save();
     renderAll();
     toast("스티커판을 비웠어요");
