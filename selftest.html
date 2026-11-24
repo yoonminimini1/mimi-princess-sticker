@@ -18,6 +18,7 @@
   <div class="pane" id="paneLand"><iframe id="pvLand" width="1180" height="820"></iframe></div>
   <div class="pane" id="panePort" style="width:615px; height:885px; overflow:hidden;"><iframe id="pvPort" width="820" height="1180" style="transform:scale(0.75); transform-origin:top left;"></iframe></div>
   <div class="pane" id="panePop"><iframe id="pvPop" width="430" height="760"></iframe></div>
+  <div class="pane" id="paneFin"><iframe id="pvFin" width="430" height="760"></iframe></div>
 </div>
 <div id="stage" style="position:absolute; left:-4000px; top:0;"></div>
 <pre id="json">running…</pre>
@@ -254,6 +255,12 @@ async function previewSuite() {
   t("미리보기: 세로 판 25칸", port.contentDocument.querySelectorAll(".slot.filled").length === 25,
     port.contentDocument.querySelectorAll(".slot.filled").length);
   t("미리보기: 팝업 열림", pop.contentDocument.querySelector("#midModal").classList.contains("show"));
+  var fin = document.getElementById("pvFin");
+  seed(baseState(50, 49, true));
+  await frameLoad(fin, "fin");
+  fin.contentDocument.querySelector('.slot[data-i="49"]').click();
+  await sleep(1400);
+  t("미리보기: 최종 팝업 열림", fin.contentDocument.querySelector("#rewardModal").classList.contains("show"));
 }
 
 (async function () {
