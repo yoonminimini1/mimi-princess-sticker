@@ -66,7 +66,8 @@ function store(f) { try { return JSON.parse(win(f).localStorage.getItem(KEY)); }
 
 function openParent(f) {
   var lock = q(f, "#lockBtn");
-  lock.dispatchEvent(new win(f).PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+  var PE = win(f).PointerEvent;
+  lock.dispatchEvent(new PE("pointerdown", { bubbles: true, button: 0 }));
   return sleep(1900).then(function () {
     var qtxt = q(f, "#gateQ").textContent;
     var mm = qtxt.match(/(\d+)\s*\+\s*(\d+)/);

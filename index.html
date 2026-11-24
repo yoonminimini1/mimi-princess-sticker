@@ -102,6 +102,8 @@
   /* ---------- layout ---------- */
   .layout{display:grid; grid-template-columns:1fr; gap:clamp(10px,1.6vmin,16px);
     grid-template-areas:"progress" "picker" "board" "missions";}
+  /* 50칸처럼 긴 판은 진행바 바로 아래에 두어 한 화면에 들어오게 */
+  .layout.board-first{grid-template-areas:"progress" "board" "picker" "missions";}
   .card{
     background:rgba(255,255,255,.78);
     -webkit-backdrop-filter:blur(14px) saturate(1.1); backdrop-filter:blur(14px) saturate(1.1);
@@ -352,7 +354,7 @@
     .hero .tiara{font-size:clamp(26px,4.2vmin,40px);}
     .hero h1{font-size:clamp(20px,3.2vmin,30px); margin-top:0;}
     .hero .sub{margin-top:1px; font-size:clamp(11px,1.6vmin,14px);}
-    .layout{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
+    .layout, .layout.board-first{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);
       grid-template-areas:"progress progress" "board picker" "board missions";
       align-items:start; align-content:start; gap:clamp(8px,1.2vmin,14px);}
     .card.area-progress{padding:calc(clamp(8px,1.2vmin,14px)) clamp(14px,2vmin,22px);}
@@ -876,6 +878,8 @@
   function renderBoard(popIndex) {
     var cols = gridCols();
     var mid = midIndex();
+    var layoutEl = boardEl.closest ? boardEl.closest(".layout") : null;
+    if (layoutEl) layoutEl.classList.toggle("board-first", state.slotCount >= 50);
     var html = "";
     for (var i = 0; i < state.slotCount; i++) {
       var s = state.slots[i];
