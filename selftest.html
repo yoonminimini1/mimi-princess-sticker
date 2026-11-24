@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>스티커판 자체 점검</title>
+<style>
+  body{font-family:system-ui,"Apple SD Gothic Neo",sans-serif; margin:0; padding:12px; background:#f6f6f8;}
+  h1{font-size:16px; margin:4px 0 10px;}
+  .stage{display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;}
+  .pane{border:2px solid #ccc; background:#fff;}
+  iframe{border:0; display:block;}
+  pre{font-size:12px; line-height:1.45; background:#fff; padding:10px; border-radius:8px; white-space:pre-wrap;}
+</style>
+</head>
+<body>
+<h1>스티커판 자체 점검 (임시 페이지)</h1>
+<div class="stage" id="stage0">
+  <div class="pane" id="paneLand"><iframe id="pvLand" width="1180" height="820"></iframe></div>
+  <div class="pane" id="panePort"><iframe id="pvPort" width="820" height="1180"></iframe></div>
+  <div class="pane" id="panePop"><iframe id="pvPop" width="430" height="760"></iframe></div>
+</div>
+<div id="stage" style="position:absolute; left:-4000px; top:0;"></div>
+<pre id="json">running…</pre>
+<script>
+var KEY = "princess-sticker-v2";
+var R = [];
+function t(name, ok, info) { R.push({ name: name, ok: !!ok, info: info === undefined ? "" : String(info) }); }
+function report() {
+  var fails = R.filter(function (r) { return !r.ok; });
+  document.getElementById("json").textContent =
+    R.map(function (r) { return (r.ok ? "PASS " : "FAIL ") + r.name + (r.info ? "  [" + r.info + "]" : ""); }).join("\n")
+    + "\n\nchecks=" + R.length + " failed=" + fails.length;
+}
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function seed(obj) {
+  try {
+    if (obj === null) localStorage.removeItem(KEY);
+    else localStorage.setItem(KEY, JSON.stringify(obj));
+  } catch (e) { t("seed", false, e.message); }
+}
+function baseState(n, filled, claimed) {
+  var slots = new Array(n).fill(null);
+  for (var i = 0; i < filled; i++) slots[i] = i % 8;
+  return { v: 3, name: "Mimi", slotCount: n, slots: slots, selected: 0,
+    missions: [{ id: "m1", emoji: "✏️", text: "원리셈 2바닥" }, { id: "m2", emoji: "📖", text: "유아독해 2바닥" }],
+    doneDate: "2026-11-24", doneIds: [], reward: "👑 공주님 큰 선물!", midReward: "🎁 작은 선물 고르기!",
+    midRewardClaimed: !!claimed, crowns: 0, muted: true, helped: true };
+}
+function loadFrame(w, h) {
+  return new Promise(function (res) {
+    var f = document.createElement("iframe");
+    f.width = w; f.height = h;
+    f.onload = function () { setTimeout(function () { res(f); }, 500); };
+    f.src = "index.html?st=" + Date.now() + "-" + Math.round(Math.random() * 1e6);
+    document.getElementById("stage").appendChild(f);
+  });
+}
+function drop(f) { if (f && f.parentNode) f.parentNode.removeChild(f); }
+function doc(f) { return f.contentDocument; }
+function win(f) { return f.contentWindow; }
+function q(f, sel) { return doc(f).querySelector(sel); }
+function qa(f, sel) { return doc(f).querySelectorAll(sel); }
+function click(f, sel) { var el = q(f, sel); if (el) el.click(); return !!el; }
+function cols(f) { return win(f).getComputedStyle(q(f, "#board")).gridTemplateColumns.split(" ").length; }
+function store(f) { try { return JSON.parse(win(f).localStorage.getItem(KEY)); } catch (e) { return {}; } }
+
+function openParent(f) {
+  var lock = q(f, "#lockBtn");
+  lock.dispatchEvent(new win(f).PointerEvent("pointerdown", { bubbles: true, button: 0 }));
+  return sleep(1900).then(function () {
+    var qtxt = q(f, "#gateQ").textContent;
+    var mm = qtxt.match(/(\d+)\s*\+\s*(\d+)/);
+    var ans = String(parseInt(mm[1], 10) + parseInt(mm[2], 10));
+    for (var i = 0; i < ans.length; i++) click(f, '#keypad button[data-k="' + ans[i] + '"]');
+    click(f, '#keypad button[data-k="확인"]');
+    return sleep(450);
+  });
+}
+
+async function layoutSuite(tag, w, h) {
+  seed(baseState(50, 0, false));
+  var f = await loadFrame(w, h);
+  t(tag + ": 50칸 렌더", qa(f, ".slot").length === 50, qa(f, ".slot").length);
+  var want = (h >= w) ? 5 : 10;
+  t(tag + ": 열 " + want + "개", cols(f) === want, cols(f));
+  var slotW = q(f, ".slot").getBoundingClientRect().width;
+  var cardR = q(f, "#boardCard").getBoundingClientRect();
+  t(tag + ": 칸 " + Math.round(slotW) + "px ≥ 40", slotW >= 40, Math.round(slotW));
+  t(tag + ": 가로 넘침 없음",
+    win(f).document.documentElement.scrollWidth <= win(f).innerWidth + 1,
+    win(f).document.documentElement.scrollWidth + "/" + win(f).innerWidth);
+  t(tag + ": 판이 화면 안", cardR.bottom <= win(f).innerHeight + 2, Math.round(cardR.bottom) + "/" + win(f).innerHeight);
+  t(tag + ": 25번 중간보상 표시", q(f, '.slot[data-i="24"]').classList.contains("mid"));
+  t(tag + ": 25번에 🎁", q(f, '.slot[data-i="24"]').textContent.indexOf("🎁") >= 0);
+  t(tag + ": 50번 최종보상 표시", q(f, '.slot[data-i="49"]').classList.contains("final"));
+  t(tag + ": 50번에 🏰", q(f, '.slot[data-i="49"]').textContent.indexOf("🏰") >= 0);
+  t(tag + ": 진행바 마커 2개", qa(f, "#barMarks .bm").length === 2, qa(f, "#barMarks .bm").length);
+  t(tag + ": 진행바 표시 문구", q(f, "#progAll").textContent === "50" && q(f, "#boardSub").textContent.indexOf("중간보상 25") >= 0,
+    q(f, "#boardSub").textContent);
+  drop(f);
+}
+
+async function flowSuite(tag, w, h) {
+  seed(baseState(50, 0, false));
+  var f = await loadFrame(w, h);
+  var errs = [];
+  win(f).addEventListener("error", function (e) { errs.push(e.message); });
+  for (var i = 0; i < 24; i++) click(f, '.slot[data-i="' + i + '"]');
+  await sleep(400);
+  t(tag + ": 24칸 진행", q(f, "#progNow").textContent === "24", q(f, "#progNow").textContent);
+  t(tag + ": 24칸에서는 팝업 없음", !q(f, "#midModal").classList.contains("show"));
+  click(f, '.slot[data-i="24"]');
+  await sleep(1200);
+  t(tag + ": 25칸에서 중간보상 팝업", q(f, "#midModal").classList.contains("show"));
+  var midText = q(f, "#midModal").textContent.replace(/\s+/g, " ");
+  t(tag + ": 팝업 인사 문구", midText.indexOf("절반 성공") >= 0 && midText.indexOf("중간 보상") >= 0, midText.slice(0, 70));
+  t(tag + ": 중간보상 문구", midText.indexOf("작은 선물 고르기") >= 0);
+  t(tag + ": 25 / 50 표시", midText.indexOf("25") >= 0 && midText.indexOf("50") >= 0);
+  t(tag + ": 계속 버튼", midText.indexOf("계속 모아서 성에 도착하기") >= 0);
+  t(tag + ": midRewardClaimed 저장", store(f).midRewardClaimed === true, store(f).midRewardClaimed);
+  click(f, "#midContinueBtn");
+  await sleep(400);
+  t(tag + ": 계속 버튼으로 닫힘", !q(f, "#midModal").classList.contains("show"));
+  click(f, '.slot[data-i="25"]');
+  await sleep(1100);
+  t(tag + ": 26칸에서 다시 뜨지 않음", !q(f, "#midModal").classList.contains("show"));
+  for (var j = 26; j < 50; j++) click(f, '.slot[data-i="' + j + '"]');
+  await sleep(1500);
+  t(tag + ": 50칸에서 최종보상 팝업", q(f, "#rewardModal").classList.contains("show"));
+  var fin = q(f, "#rewardModal").textContent.replace(/\s+/g, " ");
+  t(tag + ": 최종 문구", fin.indexOf("50칸 완성") >= 0 && fin.indexOf("공주성 도착") >= 0, fin.slice(0, 70));
+  t(tag + ": 최종보상 문구", fin.indexOf("공주님 큰 선물") >= 0);
+  t(tag + ": 왕관 +1", store(f).crowns === 1, store(f).crowns);
+  t(tag + ": 진행바 100%", q(f, "#barFill").style.width === "100%", q(f, "#barFill").style.width);
+  click(f, "#newBoardBtn");
+  await sleep(600);
+  t(tag + ": 새 판 50칸 비어 있음", qa(f, ".slot").length === 50 && qa(f, ".slot.filled").length === 0);
+  t(tag + ": 중간보상 다시 무장", store(f).midRewardClaimed === false && store(f).crowns === 1,
+    store(f).midRewardClaimed + "/" + store(f).crowns);
+  t(tag + ": 흐름 오류 없음", errs.length === 0, errs.join(" | "));
+  drop(f);
+}
+
+async function parentSuite(tag) {
+  seed(baseState(50, 3, false));
+  var f = await loadFrame(1180, 820);
+  var errs = [];
+  win(f).addEventListener("error", function (e) { errs.push(e.message); });
+  await openParent(f);
+  t(tag + ": 엄마 확인 통과 후 패널", q(f, "#parentPanel").classList.contains("show"));
+  t(tag + ": 50칸이 기본 선택", q(f, "#slotSeg button.on").getAttribute("data-n") === "50");
+  t(tag + ": 선택지 10/20/50",
+    Array.prototype.map.call(qa(f, "#slotSeg button"), function (b) { return b.getAttribute("data-n"); }).join(",") === "10,20,50");
+  function setVal(sel, val) {
+    var el = q(f, sel); el.value = val;
+    el.dispatchEvent(new win(f).Event("input", { bubbles: true }));
+  }
+  setVal("#pMidReward", "🍦 달콤한 간식 타임!");
+  setVal("#pReward", "🎡 롯데월드 가기!");
+  await sleep(250);
+  q(f, "#midRewardChips .chip:nth-child(2)").click();
+  q(f, "#rewardChips .chip:nth-child(3)").click();
+  await sleep(300);
+  t(tag + ": 중간보상 저장", store(f).midReward === "🍦 달콤한 간식 타임!", store(f).midReward);
+  t(tag + ": 최종보상 저장", store(f).reward === "🧸 갖고 싶던 장난감", store(f).reward);
+  t(tag + ": 붙인 스티커 3개 유지", store(f).slots.filter(function (x) { return x !== null; }).length === 3);
+  click(f, "#previewMidReward");
+  await sleep(450);
+  var pv = q(f, "#midModal").textContent.replace(/\s+/g, " ");
+  t(tag + ": 중간보상 미리보기", q(f, "#midModal").classList.contains("show") && pv.indexOf("🍦 달콤한 간식 타임!") >= 0, pv.slice(0, 70));
+  click(f, "#closeMidBtn");
+  await sleep(350);
+  t(tag + ": 미리보기는 수령 처리 안 함", store(f).midRewardClaimed === false, store(f).midRewardClaimed);
+  q(f, '#slotSeg button[data-n="10"]').click();
+  await sleep(600);
+  t(tag + ": 10칸 전환", qa(f, ".slot").length === 10, qa(f, ".slot").length);
+  t(tag + ": 10칸에서도 스티커 유지", qa(f, ".slot.filled").length === 3, qa(f, ".slot.filled").length);
+  t(tag + ": 10칸 중간보상 5번", q(f, '.slot[data-i="4"]').classList.contains("mid"));
+  q(f, '#slotSeg button[data-n="50"]').click();
+  await sleep(600);
+  t(tag + ": 50칸 복귀", qa(f, ".slot").length === 50, qa(f, ".slot").length);
+  q(f, '#slotSeg button[data-n="20"]').click();
+  await sleep(600);
+  t(tag + ": 20칸 전환", qa(f, ".slot").length === 20, qa(f, ".slot").length);
+  t(tag + ": 20칸 중간보상 10번", q(f, '.slot[data-i="9"]').classList.contains("mid"));
+  t(tag + ": 20칸 열 수", cols(f) === (win(f).innerHeight >= win(f).innerWidth ? 4 : 5), cols(f));
+  click(f, "#parentClose");
+  await sleep(400);
+  t(tag + ": 엄마 모드 오류 없음", errs.length === 0, errs.join(" | "));
+  drop(f);
+}
+
+async function undoSuite(tag) {
+  seed(baseState(50, 25, true));
+  var f = await loadFrame(1180, 820);
+  t(tag + ": 25칸 불러오기", qa(f, ".slot.filled").length === 25, qa(f, ".slot.filled").length);
+  t(tag + ": 지난 판은 팝업 없음", !q(f, "#midModal").classList.contains("show"));
+  await openParent(f);
+  click(f, "#undoSticker");
+  await sleep(500);
+  t(tag + ": 24칸이 되면 중간보상 다시 무장",
+    store(f).midRewardClaimed === false && qa(f, ".slot.filled").length === 24,
+    store(f).midRewardClaimed + "/" + qa(f, ".slot.filled").length);
+  click(f, "#parentClose");
+  await sleep(300);
+  drop(f);
+}
+
+async function migrateSuite(tag) {
+  seed({ v: 2, name: "Mimi", slotCount: 20,
+    slots: [1, 2, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+    selected: 0, missions: [{ id: "m1", emoji: "✏️", text: "원리셈" }], doneDate: "2026-11-24", doneIds: [],
+    reward: "🎁 옛날 보상", crowns: 2, muted: true, helped: true });
+  var f = await loadFrame(1180, 820);
+  t(tag + ": 예전 20칸 저장 → 50칸", qa(f, ".slot").length === 50, qa(f, ".slot").length);
+  t(tag + ": 붙인 스티커 3개 보존", qa(f, ".slot.filled").length === 3, qa(f, ".slot.filled").length);
+  await openParent(f);
+  t(tag + ": 기존 최종보상 문구 보존", q(f, "#pReward").value === "🎁 옛날 보상", q(f, "#pReward").value);
+  t(tag + ": 중간보상 기본값 채움", q(f, "#pMidReward").value === "🎁 작은 선물 고르기!", q(f, "#pMidReward").value);
+  t(tag + ": 왕관 2개 보존", q(f, "#pCrowns").textContent === "2", q(f, "#pCrowns").textContent);
+  drop(f);
+
+  seed(baseState(10, 4, false));
+  var f2 = await loadFrame(1180, 820);
+  t(tag + ": 저장된 10칸은 그대로", qa(f2, ".slot").length === 10, qa(f2, ".slot").length);
+  t(tag + ": 10칸 스티커 보존", qa(f2, ".slot.filled").length === 4, qa(f2, ".slot.filled").length);
+  drop(f2);
+}
+
+function frameLoad(fr, tag) {
+  return new Promise(function (r) {
+    fr.onload = function () { setTimeout(r, 700); };
+    fr.src = "index.html?pv=" + tag + Date.now();
+  });
+}
+
+async function previewSuite() {
+  var land = document.getElementById("pvLand");
+  var port = document.getElementById("pvPort");
+  var pop = document.getElementById("pvPop");
+  seed(baseState(50, 25, true));
+  await frameLoad(land, "land");
+  seed(baseState(50, 25, true));
+  await frameLoad(port, "port");
+  seed(baseState(50, 24, false));
+  await frameLoad(pop, "pop");
+  pop.contentDocument.querySelector('.slot[data-i="24"]').click();
+  await sleep(1300);
+  t("미리보기: 가로 판 25칸", land.contentDocument.querySelectorAll(".slot.filled").length === 25,
+    land.contentDocument.querySelectorAll(".slot.filled").length);
+  t("미리보기: 세로 판 25칸", port.contentDocument.querySelectorAll(".slot.filled").length === 25,
+    port.contentDocument.querySelectorAll(".slot.filled").length);
+  t("미리보기: 팝업 열림", pop.contentDocument.querySelector("#midModal").classList.contains("show"));
+}
+
+(async function () {
+  try {
+    await layoutSuite("가로1180x820", 1180, 820);
+    await layoutSuite("세로820x1180", 820, 1180);
+    await layoutSuite("모바일390x844", 390, 844);
+    await flowSuite("가로", 1180, 820);
+    await flowSuite("세로", 820, 1180);
+    await parentSuite("엄마모드");
+    await undoSuite("되돌리기");
+    await migrateSuite("이전판");
+    report();
+    await previewSuite();
+    report();
+  } catch (e) {
+    t("harness exception", false, (e && e.message) || String(e));
+    report();
+  }
+})();
+</script>
+</body>
+</html>
